@@ -1,0 +1,122 @@
+<!--2015/07/09
+달력을 만드는 소스
+자바스크립트인데 음력은 자바라이브러리에서 가져왔네요.
+자바만으로 하면 너무 길어집니다.-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World</title>
+    <style>
+        h2{
+            Display: Inline;
+        }
+        #calendarDiv td{
+            width:100px;
+            height:100px;
+            /* border: solid black 1px; */
+        }
+    </style>
+    <script src="common/js/jquery-1.11.3.js" ></script>
+    <script type="text/javaScript">
+
+        var toDate = new Date();
+        var toYear = toDate.getFullYear();
+        var toMonth = toDate.getMonth();
+        var toDay = toDate.getDate();
+
+        $(document).ready(function(){
+
+            <!--년 월을 넣어 달력 제작 -->
+            showCalendar(toYear , Number(toMonth+1));
+
+        });
+
+        <!--오늘 날짜 -->
+        function fnSet(){
+            $('.'+Number(toDay)).css('color', 'red');
+        }
+
+        <!-- 켈린더 제작 -->
+        function showCalendar(y, m) {
+            var text = '<div style="text-align:center">';
+            text += '<span onclick="showCalendar('+(y-1)+','+m+')"><input type="button" value="<<"> </span>';
+            text += '<span onclick="showCalendar('+(m==1? (y-1)+','+12:y+','+(m-1))+')"><input type="button" value="<="></span>';
+            text += '<h2> [' + y + '/' + ((m<10) ? ('0' + m) : m ) + '] </h2>';
+            text += '<span onclick="showCalendar('+(m==12? (y+1)+ ','+1: y+","+(m+1))+')"><input type="button" value="=>"></span>';
+            text += '<span onclick="showCalendar('+(y+1)+','+m+')"><input type="button" value=">>"></span>';
+            text += '</div>\n';
+
+            text += '<table>\n<thead>\n';
+            text += '<th scope="col">일</th>\n';
+            text += '<th scope="col">월</th>\n';
+            text += '<th scope="col">화</th>\n';
+            text += '<th scope="col">수</th>\n';
+            text += '<th scope="col">목</th>\n';
+            text += '<th scope="col">금</th>\n';
+            text += '<th scope="col">토</th>\n';
+            text += '</thead>\n<tbody>\n<tr>';
+
+
+            var d1 = (y+(y-y%4)/4-(y-y%100)/100+(y-y%400)/400
+                    +m*2+(m*5-m*5%9)/9-(m<3?y%4||y%100==0&&y%400?2:3:4))%7;
+            for (var i = 0; i < 42; i++){
+                if (i%7==0) text += '</tr>\n<tr>';
+
+                if (i < d1 || i >= d1+(m*9-m*9%8)/8%2+(m==2?y%4||y%100==0&&y%400?28:29:30)){
+                    text += '<td> </td>';
+                }
+                else{
+                    text += '<td' + (i%7 ? '' : ' style="color:red;"') +' class="'+ (i+1-d1) + '">' + (i+1-d1) + '</td>';
+                }
+            }
+            document.getElementById('calendarDiv').innerHTML = text + '</tr>\n</tbody></table>';
+
+            //현재 년, 월과 일치시
+            if(toYear === Number(y) && toMonth+1 === Number(m)){
+                fnSet();
+            }
+            fnholiSunDay(m);
+
+        }
+
+        <!-- 공휴일 정보를 담을 함수 생성 -->
+        function holiDaysSunList(sunMonth,sunDay,sunName,solarLunar){
+            this.sunMonth = sunMonth;
+            this.sunDay = sunDay;
+            this.sunName = sunName;
+            this.solarLunar = solarLunar;
+        }
+        <!-- 공휴일 리스트 배열 작성 -->
+        var holiDaysSunLists = [new holiDaysSunList(1,1,"신정",1),
+                new holiDaysSunList(3,1,"3.1절",1),
+                new holiDaysSunList(5,5,"어린이날",1),
+                new holiDaysSunList(8,15,"광복절",1),
+                new holiDaysSunList(10,3,"개천절",1),
+                new holiDaysSunList(10,9,"한글날",1),
+                new holiDaysSunList(12,25,"크리스마스",1)];
+        <!-- 공휴일 리스트 배열을 달력에 삽입 -->
+        function fnholiSunDay(m){
+            for(var i = 0; i < holiDaysSunLists.length; i++){
+                if (Number(m) === holiDaysSunLists[i].sunMonth) {
+                    $('.' + holiDaysSunLists[i].sunDay).html(holiDaysSunLists[i].sunDay
+                            + '<br><span class="colorPoint">'+holiDaysSunLists[i].sunName+'</span>');
+                    $('.' + holiDaysSunLists[i].sunDay).css('color', '#C12DFF');
+                    $('.colorPoint').css('color', '#0000FF');
+                }
+            }
+        }
+
+
+    </script>
+
+</head>
+<body>
+    <article class="ui-board ui-list">
+        <div id="calendarDiv" style="text-align:center">
+
+        </div>
+    </article>
+</body>
+</html>
