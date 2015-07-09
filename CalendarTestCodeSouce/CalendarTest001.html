@@ -27,10 +27,8 @@
         var toDay = toDate.getDate();
 
         $(document).ready(function(){
-
             <!--년 월을 넣어 달력 제작 -->
             showCalendar(toYear , Number(toMonth+1));
-
         });
 
         <!--오늘 날짜 -->
@@ -77,8 +75,8 @@
             if(toYear === Number(y) && toMonth+1 === Number(m)){
                 fnSet();
             }
+            //공휴일 리스트 배열 실행
             fnholiSunDay(m);
-
         }
 
         <!-- 공휴일 정보를 담을 함수 생성 -->
