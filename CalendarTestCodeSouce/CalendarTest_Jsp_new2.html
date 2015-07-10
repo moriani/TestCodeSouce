@@ -22,25 +22,28 @@
 <script type="text/javaScript">
 
     var toDate = new Date();
-    /* var toYear = toDate.getFullYear();
-     var toMonth = toDate.getMonth(); */
+    var toYear = toDate.getFullYear();
+    var toMonth = toDate.getMonth();
     var toDay = toDate.getDate();
 
-    var toYear
-    var toMonth
+    var toYearNow
+    var toMonthNow
 
     //변동된 년과 달을 가져온다.
     $(document).ready(function(){
-        toYear = <c:out value="${Year}"/>
-        toMonth = <c:out value="${Month}"/>
+        toYearNow = <c:out value="${Year}"/>
+        toMonthNow = <c:out value="${Month}"/>
 
                     <!--년 월을 넣어 달력 제작 -->
-                showCalendar( toYear, toMonth);
+                showCalendar( toYearNow, toMonthNow);
     });
 
     <!--음력 달력에 넣기-->
 
     function fnHoliLunarSet2(y,m){
+
+        var d1 = (y+(y-y%4)/4-(y-y%100)/100+(y-y%400)/400
+                +m*2+(m*5-m*5%9)/9-(m<3?y%4||y%100==0&&y%400?2:3:4))%7;
 
     <c:forEach var="rs" items="${holiDayList}" varStatus="status">
 
@@ -48,16 +51,57 @@
 
             if(${status.index}===0){
                 $('.'+'${rs.day}').html('${rs.day}'+' <br><span class="colorPoint">구정</span>');
-                $('.colorPoint').css('color','#0000FF');
+
             }
             if(${status.index}===3){
                 $('.'+'${rs.day}').html('${rs.day}'+' <br><span class="colorPoint">부처님 오신날</span>');
-                $('.colorPoint').css('color','#0000FF');
+
             }
             if(${status.index}===4){
                 $('.'+'${rs.day}').html('${rs.day}'+' <br><span class="colorPoint">추석</span>');
-                $('.colorPoint').css('color','#0000FF');
+
             }
+
+            <!-- 대체 공휴일 추가 코드 -->
+            if(${status.index}!=3)
+            for(var j=0; j<42 ; j++){
+
+                if(j%7 === 0 && Number('${rs.day}') === (j+1-d1)){
+                    <!-- 구정 0중간,1앞날,2마지막날-->
+                    if(${status.index}===0){
+                        $('.'+(Number('${rs.day}')+2)).html((Number('${rs.day}')+2)
+                                +'<br><span class="colorPoint">'+'대체휴일'+'</span>');
+                        $('.'+(Number('${rs.day}')+2)).css('color','#41A541');
+                    }
+                    if(${status.index}===1){
+                        $('.'+(Number('${rs.day}')+3)).html((Number('${rs.day}')+3)
+                                +'<br><span class="colorPoint">'+'대체휴일'+'</span>');
+                        $('.'+(Number('${rs.day}')+3)).css('color','#41A541');
+                    }
+                    if(${status.index}===2){
+                        $('.'+(Number('${rs.day}')+1)).html((Number('${rs.day}')+1)
+                                +'<br><span class="colorPoint">'+'대체휴일'+'</span>');
+                        $('.'+(Number('${rs.day}')+1)).css('color','#41A541');
+                    }
+                    <!-- 추석 4중간,5앞날, 6마지막날-->
+                    if(${status.index}===4){
+                        $('.'+(Number('${rs.day}')+2)).html((Number('${rs.day}')+2)
+                                +'<br><span class="colorPoint">'+'대체휴일'+'</span>');
+                        $('.'+(Number('${rs.day}')+2)).css('color','#41A541');
+                    }
+                    if(${status.index}===5){
+                        $('.'+(Number('${rs.day}')+3)).html((Number('${rs.day}')+3)
+                                +'<br><span class="colorPoint">'+'대체휴일'+'</span>');
+                        $('.'+(Number('${rs.day}')+3)).css('color','#41A541');
+                    }
+                    if(${status.index}===6){
+                        $('.'+(Number('${rs.day}')+1)).html((Number('${rs.day}')+1)
+                                +'<br><span class="colorPoint">'+'대체휴일'+'</span>');
+                        $('.'+(Number('${rs.day}')+1)).css('color','#41A541');
+                    }
+                }//if 끝
+            }//for 끝
+            $('.colorPoint').css('color','#0000FF');
             $('.'+'${rs.day}').css('color','#41A541');
         }
 
@@ -128,7 +172,7 @@
         document.getElementById('calendarDiv').innerHTML = text + '</tr>\n</tbody></table>';
 
         //현재 년, 월과 일치시
-        if(toYear === Number(y) && toMonth === Number(m)){
+        if(Number(toYear) === Number(y) && Number(toMonth+1) === Number(m)){
             fnSet();
         }
 
@@ -137,20 +181,20 @@
     }
 
     <!--양력 공휴일 추가소스들: 공휴일 정보를 담을 함수 생성 -->
-    function holiDaysSunList(sunMonth,sunDay,sunName,solarLunar){
+    function holiDaysSunList(sunMonth,sunDay,sunName,Substitute){
         this.sunMonth = sunMonth;
         this.sunDay = sunDay;
         this.sunName = sunName;
-        this.solarLunar = solarLunar;
+        this.Substitute = Substitute;
     }
     <!-- 공휴일 리스트 배열 작성 -->
-    var holiDaysSunLists = [new holiDaysSunList(1,1,"신정",1),
-        new holiDaysSunList(3,1,"3.1절",1),
-        new holiDaysSunList(5,5,"어린이날",1),
-        new holiDaysSunList(8,15,"광복절",1),
-        new holiDaysSunList(10,3,"개천절",1),
-        new holiDaysSunList(10,9,"한글날",1),
-        new holiDaysSunList(12,25,"크리스마스",1)];
+    var holiDaysSunLists =  [new holiDaysSunList(1,1,"신정",false),
+        new holiDaysSunList(3,1,"3.1절",false),
+        new holiDaysSunList(5,5,"어린이날",true), //어린이날은 토요일,일요일 대체휴일
+        new holiDaysSunList(8,15,"광복절",false),
+        new holiDaysSunList(10,3,"개천절",false),
+        new holiDaysSunList(10,9,"한글날",false),
+        new holiDaysSunList(12,25,"크리스마스",false)];
     <!-- 공휴일 리스트 배열을 달력에 삽입 -->
     function fnHoliSunSet(y,m){
         for(var i = 0; i < holiDaysSunLists.length; i++){
@@ -159,26 +203,45 @@
                         + '<br><span class="colorPoint">'+holiDaysSunLists[i].sunName+'</span>');
                 $('.' + holiDaysSunLists[i].sunDay).css('color', '#C12DFF');
                 $('.colorPoint').css('color', '#0000FF');
+
+                <!-- 대체공휴일 체크 -->
+                if(holiDaysSunLists[i].Substitute){
+                    var d1 = (y+(y-y%4)/4-(y-y%100)/100+(y-y%400)/400
+                            +m*2+(m*5-m*5%9)/9-(m<3?y%4||y%100==0&&y%400?2:3:4))%7;
+                    for(var j=0; j<42 ; j++){
+                        if(j%7 === 6 && holiDaysSunLists[i].sunDay === (j+1-d1)){ //토요일 어린이날
+                            $('.' + (holiDaysSunLists[i].sunDay+2)).html((holiDaysSunLists[i].sunDay+2)
+                                    +'<br><span class="colorPoint">'+'대체휴일'+'</span>');
+                            $('.' + (holiDaysSunLists[i].sunDay+2)).css('color', '#C12DFF');
+                            $('.colorPoint').css('color', '#0000FF');
+                        }else if(j%7 === 0 && holiDaysSunLists[i].sunDay === (j+1-d1)){ //일요일 어린이날
+                            $('.' + (holiDaysSunLists[i].sunDay+1)).html((holiDaysSunLists[i].sunDay+1)
+                                    +'<br><span class="colorPoint">'+'대체휴일'+'</span>');
+                            $('.' + (holiDaysSunLists[i].sunDay+1)).css('color', '#C12DFF');
+                            $('.colorPoint').css('color', '#0000FF');
+                        }
+                    }
+                }
             }
         }
     }
 </script>
+<article class="ui-calendar">
+    <form:form commandName="searchVO" name="form" method="post" action="/Request.do">
+        <input type="hidden" name="execute" id="execute" value="<c:out value='${searchVO.execute}'/>" title="상세실행구분"/>
+        <input type="hidden" name="TOKEN_KEY" id="TOKEN_KEY" value="<c:out value='${TOKEN_KEY}'/>" title="실행중복확인키"/>
+        <form:hidden path="command" title="실행구분"/>
+        <input type="hidden" name="execute" id="execute" value="<c:out value='${searchVO.execute}'/>" title="상세실행구분"/>
+        <form:hidden path="pageid" title="페이지아이디"/>
+        <form:hidden path="scheYear" title="검색년도"/>
+        <form:hidden path="scheMonth" title="검색달"/>
+        <form:hidden path="searchIdx" title="검색일련번호"/>
 
-<form:form commandName="searchVO" name="form" method="post" action="/Request.do">
-    <input type="hidden" name="execute" id="execute" value="<c:out value='${searchVO.execute}'/>" title="상세실행구분"/>
-    <input type="hidden" name="TOKEN_KEY" id="TOKEN_KEY" value="<c:out value='${TOKEN_KEY}'/>" title="실행중복확인키"/>
-    <form:hidden path="command" title="실행구분"/>
-    <input type="hidden" name="execute" id="execute" value="<c:out value='${searchVO.execute}'/>" title="상세실행구분"/>
-    <form:hidden path="pageid" title="페이지아이디"/>
-    <form:hidden path="scheYear" title="검색년도"/>
-    <form:hidden path="scheMonth" title="검색달"/>
-    <form:hidden path="searchIdx" title="검색일련번호"/>
-
-    <div id="calendarDiv" style="text-align:center">
-    </div>
+        <div id="calendarDiv" style="text-align:center">
+        </div>
 
 
-</form:form>
-
+    </form:form>
+</article>
 
 <jsp:include page="/Component/module/footer.jsp" flush="true"/>

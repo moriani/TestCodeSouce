@@ -1,0 +1,172 @@
+package ncin.request;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import ncin.common.bean.CalendarVO;
+import ncin.common.bean.SearchVO;
+import ncin.common.utility.LunarCalendar;
+import ncin.common.utility.Utility;
+import ncin.request.service.RequestServiceImpl;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import org.springframework.ui.ModelMap;
+import org.springmodules.validation.commons.DefaultBeanValidator;
+
+import com.ibm.icu.util.Calendar;
+
+import egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService;
+import egovframework.rte.fdl.property.EgovPropertyService;
+
+@Repository("requestModule")
+public class RequestModule {
+
+	/**리퀘스트 서비스**/
+	@Autowired
+	private RequestServiceImpl requestService;
+	/** BeanValidator **/
+    @Resource(name = "beanValidator")
+	protected DefaultBeanValidator beanValidator;
+    /** IdGnr 서비스 **/
+    @Resource(name="idGnrService")
+    protected EgovTableIdGnrService idGnrService;
+    /** EgovPropertyService **/
+    @Resource(name="propertiesService")
+    protected EgovPropertyService propertiesService;
+
+
+    /**
+     * 리퀘스트 리스트
+     *
+     * @param searchVO
+     * @param model
+     * @return
+     * @throws Exception
+     */
+    public String RequestList(SearchVO searchVO, ModelMap model) throws Exception {
+
+		/** 켈린더 객체 생성후 현재 시간 가져오기  **/
+		Calendar cal = Calendar.getInstance();
+
+		//현재 년월 세팅
+		model.addAttribute("NowYear", cal.get(Calendar.YEAR));
+		model.addAttribute("NowMonth", cal.get(Calendar.MONTH)+1);
+
+		//검색 년,월이 비어있지않을 경우
+		if(searchVO.getScheYear() > 0){
+			cal.set(Calendar.YEAR, searchVO.getScheYear());
+		}
+		if(searchVO.getScheMonth() > 0){
+			cal.set(Calendar.MONTH, searchVO.getScheMonth());
+		}
+
+		List<CalendarVO>holiDayList = new ArrayList<CalendarVO>();
+
+		//음력 -> 양력 계산-루나 켈린더 사용 자바 자체 API
+		LunarCalendar lc = new LunarCalendar();
+		String lunarDate = lc.fromLunar(cal.get(Calendar.YEAR)+"0101"); //설날
+		String lunarYear = lunarDate.substring(0,4); //년도
+		String lunarMonth = lunarDate.substring(4,6); //월
+		String lunarDay = lunarDate.substring(6,8); //일
+
+		//날짜 데이터를 -> 숫자형으로 변환 -> 문자형으로 변환해arrList에 넣는다.
+		holiDayList.add(new CalendarVO(String.valueOf(Integer.valueOf(lunarMonth)),
+				String.valueOf(Integer.valueOf(lunarDay)))); //설날 당일
+		Calendar lunarCal = Calendar.getInstance();
+		lunarCal.set(Integer.valueOf(lunarYear), Integer.valueOf(lunarMonth) -1, Integer.valueOf(lunarDay));
+		lunarCal.add(Calendar.DATE, -1);
+		holiDayList.add(new CalendarVO(String.valueOf(lunarCal.get(Calendar.MONTH) + 1 ),
+				String.valueOf(lunarCal.get(Calendar.DATE))));	//설날 첫날
+		lunarCal.add(Calendar.DATE, +2);
+		holiDayList.add(new CalendarVO(String.valueOf(lunarCal.get(Calendar.MONTH) + 1 ),
+				String.valueOf(lunarCal.get(Calendar.DATE))));	//설날 마지막날
+
+		//켈런더의 년도에 음력 날짜를 넣어서 음력API로 변환해 Date에 집어 넣은 후 필요한부분을 잘라낸다.
+		lunarDate = lc.fromLunar(cal.get(Calendar.YEAR) + "0408");
+		lunarYear = lunarDate.substring(0,4);
+		lunarMonth = lunarDate.substring(4,6);
+		lunarDay = lunarDate.substring(6,8);
+		holiDayList.add(new CalendarVO(String.valueOf(Integer.valueOf(lunarMonth)),
+				String.valueOf(Integer.valueOf(lunarDay)))); //석가탄신일
+
+		lunarDate = lc.fromLunar(cal.get(Calendar.YEAR)+ "0815");	//추석
+		lunarYear = lunarDate.substring(0,4);
+		lunarMonth = lunarDate.substring(4,6);
+		lunarDay = lunarDate.substring(6,8);
+		holiDayList.add(new CalendarVO(String.valueOf(Integer.valueOf(lunarMonth)),
+				String.valueOf(Integer.valueOf(lunarDay)))); // 추석 당일
+
+		//초기화 한다.
+		lunarCal.set(Integer.valueOf(lunarYear), Integer.valueOf(lunarMonth) -1, Integer.valueOf(lunarDay));
+		lunarCal.add(Calendar.DATE, -1);
+		holiDayList.add(new CalendarVO(String.valueOf(lunarCal.get(Calendar.MONTH) + 1 ),
+				String.valueOf(lunarCal.get(Calendar.DATE)))); // 추석 첫날
+		lunarCal.add(Calendar.DATE, +2);
+		holiDayList.add(new CalendarVO(String.valueOf(lunarCal.get(Calendar.MONTH) + 1 ),
+				String.valueOf(lunarCal.get(Calendar.DATE)))); //추석 마지막 날
+
+		model.addAttribute("holiDayList", holiDayList);
+
+
+
+
+		/**검색일자 셋팅*/
+		if (searchVO.getScheDay() <= 0)
+			searchVO.setScheDay(cal.get(Calendar.DATE));
+		if (searchVO.getScheYear() <= 0 || searchVO.getScheMonth() <= 0) {
+			searchVO.setScheYear(cal.get(Calendar.YEAR));
+			searchVO.setScheMonth(cal.get(Calendar.MONTH) + 1);
+		}
+
+		cal.set(searchVO.getScheYear(), searchVO.getScheMonth() - 1, searchVO.getScheDay());
+		model.addAttribute("request", cal.get(Calendar.DAY_OF_WEEK));
+		cal.set(searchVO.getScheYear(), searchVO.getScheMonth() - 1, 1);
+
+		/**달력셋팅*/
+		int eDay = cal.getActualMaximum(Calendar.DATE);
+		model.addAttribute("Year", cal.get(Calendar.YEAR));
+		model.addAttribute("Month", cal.get(Calendar.MONTH) + 1);
+		model.addAttribute("eDay", eDay);
+		model.addAttribute("sDay", cal.get(Calendar.DAY_OF_WEEK));
+
+		/**다음달 셋팅*/
+		model.addAttribute("nYear", Utility.getAddIntDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, 1, "M", 1, 0));
+		model.addAttribute("nMonth", Utility.getAddIntDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, 1, "M", 1, 1));
+
+		/**이전달*/
+		model.addAttribute("pYear", Utility.getAddIntDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, 1, "M", -1, 0));
+		model.addAttribute("pMonth", Utility.getAddIntDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, 1, "M", -1, 1));
+		String month = "";
+
+		if(searchVO.getScheMonth()  < 10){
+			month = "0"+ searchVO.getScheMonth();
+		}else{
+			month  = String.valueOf(searchVO.getScheMonth());
+		}
+		searchVO.setScheDate(String.valueOf(searchVO.getScheYear()) + month);
+
+		searchVO.setFirstIndex(0);
+		searchVO.setLastIndex(9999);
+
+
+
+
+    	return "SUCCESS";
+	}
+
+    public String RequestNext(SearchVO searchVO, ModelMap model) throws Exception {
+
+    	/** 켈린더 객체 생성후 현재 시간 가져오기  **/
+		Calendar cal = Calendar.getInstance();
+
+		//현재 년월 세팅
+		model.addAttribute("nowYear", cal.get(Calendar.YEAR));
+		model.addAttribute("nowMonth", cal.get(Calendar.MONTH)+1);
+
+
+    	return "SUCCESS";
+    }
+}

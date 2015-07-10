@@ -76,32 +76,55 @@
                 fnSet();
             }
             //공휴일 리스트 배열 실행
-            fnholiSunDay(m);
+            fnholiSunDay(y,m);
         }
 
         <!-- 공휴일 정보를 담을 함수 생성 -->
-        function holiDaysSunList(sunMonth,sunDay,sunName,solarLunar){
+        function holiDaysSunList(sunMonth,sunDay,sunName,Substitute){
             this.sunMonth = sunMonth;
             this.sunDay = sunDay;
             this.sunName = sunName;
-            this.solarLunar = solarLunar;
+            this.Substitute = Substitute;
         }
         <!-- 공휴일 리스트 배열 작성 -->
-        var holiDaysSunLists = [new holiDaysSunList(1,1,"신정",1),
-                new holiDaysSunList(3,1,"3.1절",1),
-                new holiDaysSunList(5,5,"어린이날",1),
-                new holiDaysSunList(8,15,"광복절",1),
-                new holiDaysSunList(10,3,"개천절",1),
-                new holiDaysSunList(10,9,"한글날",1),
-                new holiDaysSunList(12,25,"크리스마스",1)];
+        var holiDaysSunLists = [new holiDaysSunList(1,1,"신정",false),
+            new holiDaysSunList(3,1,"3.1절",false),
+            new holiDaysSunList(5,5,"어린이날",true),
+            new holiDaysSunList(8,15,"광복절",false),
+            new holiDaysSunList(10,3,"개천절",false),
+            new holiDaysSunList(10,9,"한글날",false),
+            new holiDaysSunList(12,25,"크리스마스",false)];
         <!-- 공휴일 리스트 배열을 달력에 삽입 -->
-        function fnholiSunDay(m){
+        function fnholiSunDay(y,m){
             for(var i = 0; i < holiDaysSunLists.length; i++){
                 if (Number(m) === holiDaysSunLists[i].sunMonth) {
                     $('.' + holiDaysSunLists[i].sunDay).html(holiDaysSunLists[i].sunDay
                             + '<br><span class="colorPoint">'+holiDaysSunLists[i].sunName+'</span>');
                     $('.' + holiDaysSunLists[i].sunDay).css('color', '#C12DFF');
                     $('.colorPoint').css('color', '#0000FF');
+
+                    <!-- 대체공휴일 체크 -->
+                    if(holiDaysSunLists[i].Substitute){
+                        var d1 = (y+(y-y%4)/4-(y-y%100)/100+(y-y%400)/400
+                                +m*2+(m*5-m*5%9)/9-(m<3?y%4||y%100==0&&y%400?2:3:4))%7;
+                        for(var j=0; j<42 ; j++){
+                            if(j%7 === 6 && holiDaysSunLists[i].sunDay === (j+1-d1)){ //토요일 어린이날
+                                alert("으아아아");
+                                $('.' + (holiDaysSunLists[i].sunDay+2)).html((holiDaysSunLists[i].sunDay+2)
+                                        +'<br><span class="colorPoint">'+'대체휴일'+'</span>');
+                                $('.' + (holiDaysSunLists[i].sunDay+2)).css('color', '#C12DFF');
+                                $('.colorPoint').css('color', '#0000FF');
+                            }else if(j%7 === 0 && holiDaysSunLists[i].sunDay === (j+1-d1)){ //일요일 어린이날
+                                alert("으아아아");
+                                $('.' + (holiDaysSunLists[i].sunDay+1)).html((holiDaysSunLists[i].sunDay+1)
+                                        +'<br><span class="colorPoint">'+'대체휴일'+'</span>');
+                                $('.' + (holiDaysSunLists[i].sunDay+1)).css('color', '#C12DFF');
+                                $('.colorPoint').css('color', '#0000FF');
+                            }
+
+                        }
+
+                    }
                 }
             }
         }
@@ -111,10 +134,10 @@
 
 </head>
 <body>
-    <article class="ui-board ui-list">
-        <div id="calendarDiv" style="text-align:center">
+<article class="ui-board ui-list">
+    <div id="calendarDiv" style="text-align:center">
 
-        </div>
-    </article>
+    </div>
+</article>
 </body>
 </html>
