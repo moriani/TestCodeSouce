@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript">
+
+        var hours;
+        var minutes;
+        var seconds;
+        var ampm;
+
+        setInterval(dpTime(), 1000);
+        function dpTime(){
+            var nowDate = new Date();
+            hours = nowDate.getHours();
+            minutes = nowDate.getMinutes();
+            seconds = nowDate.getSeconds();
+
+            if(hours > 12){
+                hours -= 12;
+                ampm = "오후";
+            }else{
+                ampm ="오전";
+            }
+            if(hours <10){
+                hours = '0' + hours;
+            }
+            if(minutes < 10){
+                minutes = '0' + minutes;
+            }
+            if(seconds < 10){
+                seconds = '0' + seconds;
+            }
+            document.getElementById("testTime").innerHTML = ampm + hours +":"+minutes+":"+seconds;
+        }
+    </script>
+</head>
+<body>
+    <span id="testTime">오후 09:55:55</span>
+</body>
+</html>

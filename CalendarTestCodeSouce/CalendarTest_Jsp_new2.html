@@ -26,14 +26,17 @@
      var toMonth = toDate.getMonth(); */
     var toDay = toDate.getDate();
 
-    var toYear = <c:out value="${NowYear}"/>
-    var toMonth = <c:out value="${NowMonth}"/>
+    var toYear
+    var toMonth
 
+    //변동된 년과 달을 가져온다.
+    $(document).ready(function(){
+        toYear = <c:out value="${Year}"/>
+        toMonth = <c:out value="${Month}"/>
 
-            $(document).ready(function(){
-                <!--년 월을 넣어 달력 제작 -->
-                showCalendar(toYear , toMonth);
-            });
+                    <!--년 월을 넣어 달력 제작 -->
+                showCalendar( toYear, toMonth);
+    });
 
     <!--음력 달력에 넣기-->
 
@@ -61,7 +64,27 @@
     </c:forEach>
     }
 
+    <!-- 변동 데이터를 넣어 다시 화면을 리로딩한다-->
+    function showCalendarNow(y,m){
+        var nYear = y;
+        var nMonth = m;
 
+        if(Number(m) === 0)
+        {
+            m = 12;
+            nYear = Number(nYear)-1;
+        }
+        else if(Number(m) > 12)
+        {
+            nYear = Number(nYear)+1;
+            nMonth = 01;
+        }
+        setValue(getForm().scheYear, nYear);
+        setValue(getForm().scheMonth, nMonth);
+        POST("/Request.do");
+        /* 	showCalendar(nYear, nMonth); */
+
+    }
 
     <!--오늘 날짜 -->
     function fnSet(){
@@ -71,13 +94,12 @@
     <!-- 켈린더 제작 -->
     function showCalendar(y, m) {
 
-
         var text = '<div style="text-align:center">';
-        text += '<span onclick="showCalendar('+(y-1)+','+m+')"><input type="button" value="<<"> </span>';
-        text += '<span onclick="showCalendar('+(m==1? (y-1)+','+12:y+','+(m-1))+')"><input type="button" value="<="></span>';
+        text += '<span onclick="showCalendarNow('+(y-1)+','+m+')"><input type="button" value="<<"> </span>';
+        text += '<span onclick="showCalendarNow('+(m==1? (y-1)+','+12:y+','+(m-1))+')"><input type="button" value="<="></span>';
         text += '<h2> [' + y + '/' + ((m<10) ? ('0' + m) : m ) + '] </h2>';
-        text += '<span onclick="showCalendar('+(m==12? (y+1)+ ','+1: y+","+(m+1))+')"><input type="button" value="=>"></span>';
-        text += '<span onclick="showCalendar('+(y+1)+','+m+')"><input type="button" value=">>"></span>';
+        text += '<span onclick="showCalendarNow('+(m==12? (y+1)+ ','+1: y+","+(m+1))+')"><input type="button" value="=>"></span>';
+        text += '<span onclick="showCalendarNow('+(y+1)+','+m+')"><input type="button" value=">>"></span>';
         text += '</div>\n';
 
         text += '<table>\n<thead>\n';
@@ -142,22 +164,21 @@
     }
 </script>
 
-<article class="ui-board ui-list">
-    <form:form commandName="searchVO" name="form" method="post" action="/Request.do">
-        <input type="hidden" name="execute" id="execute" value="<c:out value='${searchVO.execute}'/>" title="상세실행구분"/>
-        <input type="hidden" name="TOKEN_KEY" id="TOKEN_KEY" value="<c:out value='${TOKEN_KEY}'/>" title="실행중복확인키"/>
-        <form:hidden path="command" title="실행구분"/>
-        <input type="hidden" name="execute" id="execute" value="<c:out value='${searchVO.execute}'/>" title="상세실행구분"/>
-        <form:hidden path="pageid" title="페이지아이디"/>
-        <form:hidden path="scheYear" title="검색년도"/>
-        <form:hidden path="scheMonth" title="검색달"/>
-        <form:hidden path="searchIdx" title="검색일련번호"/>
+<form:form commandName="searchVO" name="form" method="post" action="/Request.do">
+    <input type="hidden" name="execute" id="execute" value="<c:out value='${searchVO.execute}'/>" title="상세실행구분"/>
+    <input type="hidden" name="TOKEN_KEY" id="TOKEN_KEY" value="<c:out value='${TOKEN_KEY}'/>" title="실행중복확인키"/>
+    <form:hidden path="command" title="실행구분"/>
+    <input type="hidden" name="execute" id="execute" value="<c:out value='${searchVO.execute}'/>" title="상세실행구분"/>
+    <form:hidden path="pageid" title="페이지아이디"/>
+    <form:hidden path="scheYear" title="검색년도"/>
+    <form:hidden path="scheMonth" title="검색달"/>
+    <form:hidden path="searchIdx" title="검색일련번호"/>
 
-        <div id="calendarDiv" style="text-align:center">
+    <div id="calendarDiv" style="text-align:center">
+    </div>
 
-        </div>
 
-    </form:form>
-</article>
+</form:form>
+
 
 <jsp:include page="/Component/module/footer.jsp" flush="true"/>
